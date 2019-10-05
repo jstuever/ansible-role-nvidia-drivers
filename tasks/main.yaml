@@ -1,0 +1,30 @@
+---
+# https://docs.nvidia.com/cuda/cuda-installation-guide-linux/index.html#package-manager-installation
+- name: 'Add NVIDIA cuda repo'
+  command: 'yum-config-manager --add-repo https://developer.download.nvidia.com/compute/cuda/repos/rhel7/x86_64/cuda-rhel7.repo'
+  args:
+    creates: '/etc/yum.repos.d/cuda-rhel7.repo'
+  register: cuda_repo
+
+- name: 'Install NVIDIA drivers'
+  yum:
+    update_cache: "{{ cuda_repo is changed }}"
+    name:
+      - '@Development Tools'
+      - 'kernel-devel'
+      - 'nvidia-driver'
+      - 'nvidia-driver-devel'
+      - 'nvidia-driver-cuda'
+      - 'nvidia-modprobe'
+
+- name: 'UnLoad the nouveau kernel module'
+  modprobe:
+    name: nouveau
+    state: absent
+
+- name: 'Load NVIDIA kernel modules'
+  shell: 'nvidia-modprobe && nvidia-modprobe -u'
+
+- name: 'Ensure nvidia-smi can find a GPU'
+  shell: 'nvidia-smi'
+  changed_when: false
