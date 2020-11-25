@@ -1,12 +1,13 @@
 ---
 # https://docs.nvidia.com/cuda/cuda-installation-guide-linux/index.html#package-manager-installation
-- name: 'Add NVIDIA cuda repo'
-  command: 'yum-config-manager --add-repo https://developer.download.nvidia.com/compute/cuda/repos/rhel7/x86_64/cuda-rhel7.repo'
+- name: Add NVIDIA cuda repo
+  command: "yum config-manager --add-repo https://developer.download.nvidia.com/compute/cuda/repos/rhel{{ ansible_distribution_major_version }}/{{ ansible_architecture }}/cuda-rhel{{ ansible_distribution_major_version }}.repo"
   args:
-    creates: '/etc/yum.repos.d/cuda-rhel7.repo'
+    creates: "/etc/yum.repos.d/cuda-rhel{{ ansible_distribution_major_version }}.repo"
   register: cuda_repo
+  become: yes
 
-- name: 'Install NVIDIA drivers'
+- name: Install NVIDIA drivers
   yum:
     update_cache: "{{ cuda_repo is changed }}"
     name:
@@ -16,15 +17,18 @@
       - 'nvidia-driver-devel'
       - 'nvidia-driver-cuda'
       - 'nvidia-modprobe'
+  become: yes
 
-- name: 'UnLoad the nouveau kernel module'
+- name: UnLoad the nouveau kernel module
   modprobe:
     name: nouveau
     state: absent
+  become: yes
 
-- name: 'Load NVIDIA kernel modules'
+- name: Load NVIDIA kernel modules
   shell: 'nvidia-modprobe && nvidia-modprobe -u'
+  become: yes
 
-- name: 'Ensure nvidia-smi can find a GPU'
-  shell: 'nvidia-smi'
+- name: Ensure nvidia-smi can find a GPU
+  command: 'nvidia-smi'
   changed_when: false
